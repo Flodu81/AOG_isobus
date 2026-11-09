@@ -1,5 +1,7 @@
 Software set and ino to use the isobus through the can of the pcb steer and the udp. The basic ino and the modifications of the vt were made by paulius. 
 The other modifications of agio and the task control are mine. 
+The base code for ecu was created by buched,
+The was added to the waskeya.
 
 Not all of them have been tested yet
 
