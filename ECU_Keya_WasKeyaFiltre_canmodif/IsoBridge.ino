@@ -37,9 +37,13 @@
 //Which Teensy 4.1 CAN peripheral carries ISOBUS: 1, 2 or 3.
 //  CAN1 = TX 22 / RX 23    CAN2 = TX 1 / RX 0    CAN3 = TX 31 / RX 30
 //It needs a 3.3 V CAN transceiver on the board, and nothing else on those pins.
-#ifndef ISO_CAN_BUS_NUM
-  #define ISO_CAN_BUS_NUM 3
-#endif
+// #ifndef ISO_CAN_BUS_NUM
+//   #define ISO_CAN_BUS_NUM 3
+// #endif
+
+
+// #define ISO_CAN_BASE  CAN3
+
 
 //Shown to the PC clients in HELLO_ACK. Up to 16 characters.
 #ifndef ISO_GATEWAY_NAME
@@ -111,7 +115,7 @@
 // //The CAN1/CAN2/CAN3 tokens are the peripheral base addresses (FlexCAN_T4.h), so
 // //the error registers can be read directly whoever owns the object. FlexCAN_T4's
 // //own error() needs events() and an interrupt-driven setup; these need neither.
- #define ISO_CAN_BASE  CAN3
+ 
 
 //---- Wire protocol -----------------------------------------------------------
 // Keep in step with isobridge_proto.py. Little-endian on both ends.

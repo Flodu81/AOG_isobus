@@ -121,7 +121,6 @@ extern float emaGpsHdg;
 #include <NativeEthernetUdp.h>
 
 //---- IsoBridge host settings ----
-//#define ISO_CAN_BUS_NUM    1                      //1, 2 or 3
 #define ISO_ETHERNET_UP    Ethernet_running       //stock AiO flag, set in EthernetStart()
 #define ISO_STEER_ENGAGED  (guidanceStatus != 0)  //only reported to the PC, optional
 #define ISO_ALWAYS_ON                             //see "No console?" below
@@ -156,8 +155,11 @@ IPAddress Eth_ipDestination;
 
 #include <FlexCAN_T4.h>
 FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_256> K_Bus;    //Tractor / Control Bus
-FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_256> isoCan;  //ISO Bus
+FlexCAN_T4<CAN3, RX_SIZE_256, TX_SIZE_256> isoCan;  //ISO Bus 
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_256> Keya_Bus;
+
+#define ISO_CAN_BASE CAN3    //Numero Can isoCan pour isobus
+#define ISO_CAN_BUS_NUM 3    //Numero Can isoCan pour isobus
 
 auto& Sc_Bus = isoCan; // Choix de l'affectation du CAN pour le section control
 

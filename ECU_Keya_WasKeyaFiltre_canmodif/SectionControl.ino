@@ -362,7 +362,7 @@ bool getAutoManual()
 //  SETUP
 void sectionControlSetup()
 {
-    EEPROM.get(120, pin);
+    EEPROM.get(200, pin);
 
     Serial.println("\r\n=== Section Control ===");
 
@@ -910,7 +910,7 @@ void sendManualAutoStatus()
 void updatePinMapping(uint8_t* udpData)
 {
     for (uint8_t i = 0; i < 24; i++) pin[i] = udpData[i + 5];
-    EEPROM.put(120, pin);
+    EEPROM.put(200, pin);
 }
 
 // ============================================================================
