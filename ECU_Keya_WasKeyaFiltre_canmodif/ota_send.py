@@ -4,6 +4,8 @@ ota_send.py - envoie un firmware .hex a un Teensy 4.1 par UDP (port 8888, PGN 0x
 
 Usage :  python ota_send.py 192.168.1.126 firmware.hex
          python ota_send.py 192.168.1.126 firmware.hex --port 8888 --chunk 1024
+Double-clic : le script demande l'adresse IP et le fichier .hex, puis attend
+              une touche avant de fermer la fenetre.
 
 Remarque : fermer AgIO pendant la mise a jour (il envoie aussi sur le port 8888).
 """
@@ -51,14 +53,23 @@ def send(sock, dst, seq, data=b"", timeout=1.0, retries=10) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("ip")
-    ap.add_argument("hexfile")
+    ap.add_argument("ip", nargs="?")
+    ap.add_argument("hexfile", nargs="?")
     ap.add_argument("--port", type=int, default=8888)
     ap.add_argument("--chunk", type=int, default=1024, help="octets par paquet (<= 1400)")
     args = ap.parse_args()
 
-    with open(args.hexfile, "rb") as f:
-        data = f.read()
+    if not args.ip:
+        args.ip = input("Adresse IP du Teensy (ex. 192.168.1.126) : ").strip()
+    if not args.hexfile:
+        args.hexfile = input("Fichier .hex (glisse-le ici puis Entree) : ").strip().strip('"')
+
+    try:
+        with open(args.hexfile, "rb") as f:
+            data = f.read()
+    except OSError as e:
+        print("Impossible d'ouvrir le fichier :", e)
+        return 1
     if not data.startswith(b":"):
         print("Ce fichier ne ressemble pas a un .hex Intel.")
         return 1
@@ -101,4 +112,11 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    code = 1
+    try:
+        code = main()
+    except Exception as e:      # affiche l'erreur au lieu de fermer la fenetre
+        print("Erreur :", e)
+    if len(sys.argv) < 3:       # lance par double-clic : on laisse la fenetre ouverte
+        input("\nAppuie sur Entree pour fermer...")
+    sys.exit(code)
