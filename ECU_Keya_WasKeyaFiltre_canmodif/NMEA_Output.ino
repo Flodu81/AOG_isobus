@@ -36,6 +36,7 @@ struct CorrectedPos {
     char   ew[2];
     double altCorr;               // m, valeur à AJOUTER à l'altitude mesurée
 };
+static CorrectedPos gPos;         // résultat de computeCorrectedPos()
 
 /************************* NMEA 0183 User Settings *************************/
 // Hauteur de l'antenne pour la correction en dévers (Antenna Phase Center Height)
@@ -192,7 +193,7 @@ double nmeaToDecimal(char* nmea_str, char ns_ew_char)
 }
 
 // Degrés décimaux -> ddmm.mmmmmmm (lat) ou dddmm.mmmmmmm (lon), 7 décimales de minutes
-void decimalToNMEA(double dd, char* buf, size_t len, char* hemi, NmeaCoordType type)
+void decimalToNMEA(double dd, char* buf, size_t len, char* hemi, uint8_t type)
 {
     if (dd < 0) { hemi[0] = (type == NMEA_LAT) ? 'S' : 'W'; dd = -dd; }
     else        { hemi[0] = (type == NMEA_LAT) ? 'N' : 'E'; }
@@ -252,8 +253,9 @@ double applyRollPitchCorrection(double& lat_deg, double& lon_deg)
 }
 
 // Calcule la position corrigée formatée. Champs vides si pas de position.
-static void computeCorrectedPos(CorrectedPos& p)
+static void computeCorrectedPos()
 {
+    CorrectedPos& p = gPos;
     p.lat[0] = p.ns[0] = p.lon[0] = p.ew[0] = '\0';
     p.altCorr = 0.0;
     if (latitude[0] == '\0' || longitude[0] == '\0') return;
@@ -295,8 +297,8 @@ void BuildGGA0183()
 {
     if (!GGA_Available || !SEND_GPGGA) return;
 
-    CorrectedPos p;
-    computeCorrectedPos(p);
+    computeCorrectedPos();
+    CorrectedPos& p = gPos;
 
     char altStr[14] = "";
     if (altitude[0] != '\0') {
@@ -332,8 +334,8 @@ void BuildRMC0183()
 {
     if (!GGA_Available || !SEND_GPRMC) return;
 
-    CorrectedPos p;
-    computeCorrectedPos(p);
+    computeCorrectedPos();
+    CorrectedPos& p = gPos;
 
     char dateStr[7];
     getGpsDate(dateStr);                       // vide si inconnue
@@ -362,11 +364,10 @@ void BuildZDA0183()
 }
 
 /************************* EEPROM *************************/
-static uint16_t configCrc(const NmeaConfig& c)
+static uint16_t configCrc(const uint8_t* p, size_t n)
 {
-    const uint8_t* p = (const uint8_t*)&c;
     uint16_t crc = 0xFFFF;
-    for (size_t i = 0; i < offsetof(NmeaConfig, crc); i++) {
+    for (size_t i = 0; i < n; i++) {
         crc ^= p[i];
         for (uint8_t b = 0; b < 8; b++) crc = (crc & 1) ? (crc >> 1) ^ 0xA001 : (crc >> 1);
     }
@@ -389,7 +390,7 @@ void saveConfigToEEPROM()
     c.sendRMC = SEND_GPRMC;  c.sendZDA = SEND_GPZDA;
     c.freqGGA = GPGGA_FREQUENCY_HZ;  c.freqVTG = GPVTG_FREQUENCY_HZ;
     c.freqRMC = GPRMC_FREQUENCY_HZ;  c.freqZDA = GPZDA_FREQUENCY_HZ;
-    c.crc = configCrc(c);
+    c.crc = configCrc((const uint8_t*)&c, offsetof(NmeaConfig, crc));
 
     EEPROM.put(EEPROM_NMEA_ADDR, c);
     if (menuAllowed()) Serial.println(F("✓ Configuration sauvegardée dans l'EEPROM!"));
@@ -405,7 +406,7 @@ void loadConfigFromEEPROM()
 
     bool ok = c.signature == NMEA_CFG_SIGNATURE
            && c.version   == NMEA_CFG_VERSION
-           && c.crc       == configCrc(c)
+           && c.crc       == configCrc((const uint8_t*)&c, offsetof(NmeaConfig, crc))
            && validHeight(c.antennaHeight)
            && validBaud(c.baudrate)
            && validFreq(c.freqGGA) && validFreq(c.freqVTG)
