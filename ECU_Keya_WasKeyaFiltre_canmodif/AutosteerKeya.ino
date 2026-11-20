@@ -772,6 +772,7 @@ void ReceiveUdp()
 	{
 		Eth_udpAutoSteer.read(autoSteerUdpData, UDP_TX_PACKET_MAX_SIZE);
     if (autoSteerUdpData[3] == 0xB0) { otaEnter(len); return; }
+    if (autoSteerUdpData[3] == 0xB0) { Serial.println("OTA recu"); otaEnter(len); return; }
 
 		if (autoSteerUdpData[0] == 0x80 && autoSteerUdpData[1] == 0x81 && autoSteerUdpData[2] == 0x7F) //Data
 		{
