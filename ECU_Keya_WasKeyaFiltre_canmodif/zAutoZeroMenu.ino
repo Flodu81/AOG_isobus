@@ -13,7 +13,7 @@
 // Structure AutoZeroParams definie dans Autosteer.ino (avant ce fichier dans l'ordre de compilation)
 
 // Instance globale - valeurs par defaut
-AutoZeroParams azParams = {
+static const AutoZeroParams azDefaults = {
   .speedMin    = 2.0f,
   .yawRateMax  = 0.5f,
   .gpsHdgMax   = 0.5f,
@@ -21,12 +21,17 @@ AutoZeroParams azParams = {
   .timeFastMs  = 200,
   .speedSlow   = 3.0f,
   .speedFast   = 12.0f,
-  .useBno      = 1,      // BNO actif par defaut
-  .useGps      = 1,      // GPS actif par defaut
-  .beta        = 0.3f,  // correction douce : 5% de l'erreur par cycle
-  .zeroMode    = 1,      // 0=progressif toujours, 1=progressif ON/direct OFF (defaut), 2=guidage ON uniquement
-  .ident       = 0xA203  // bumpe pour forcer reinit EEPROM avec nouveaux champs
+  .useBno      = 1,
+  .useGps      = 1,
+  .beta        = 0.3f,
+  .zeroMode    = 1,
+  .ident       = 0xA203
 };
+
+AutoZeroParams azParams = azDefaults;
+
+
+
 
 // -----------------------------------------------------------------
 // Appeler dans autosteerSetup() apres les autres EEPROM.get()
@@ -35,7 +40,14 @@ void azMenuSetup()
 {
   AutoZeroParams saved;
   EEPROM.get(EEPROM_ADDR_AZ_PARAMS, saved);
-  if (saved.ident == 0xA203) {
+     bool valid = saved.ident == 0xA203
+            && isfinite(saved.speedMin) && isfinite(saved.yawRateMax) && isfinite(saved.gpsHdgMax)
+            && isfinite(saved.speedSlow) && isfinite(saved.speedFast) && isfinite(saved.beta)
+            && saved.beta >= 0.001f && saved.beta <= 1.0f
+            && saved.zeroMode <= 2
+            && saved.timeSlowMs <= 60000 && saved.timeFastMs <= 60000;
+
+  if (valid) {
     azParams = saved;
     Serial.println("[AZ-MENU] Parametres charges depuis EEPROM.");
   } else {
@@ -117,7 +129,7 @@ bool azMenuLoop()
 
     if (azMenuChoice == 12) {
       // Reset defaut
-      azParams = { 1.0f, 0.8f, 1.0f, 500, 200, 3.0f, 12.0f, 1, 1, 0.05f, 1, 0xA203 };
+      azParams = azDefaults;
       EEPROM.put(EEPROM_ADDR_AZ_PARAMS, azParams);
       Serial.println("[AZ-MENU] Valeurs par defaut restaurees et sauvegardees.");
       azMenuPrint();

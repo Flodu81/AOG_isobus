@@ -11,7 +11,7 @@ uint8_t Brand = 5;
 
 enum PositionType { LATITUDE, LONGITUDE }; //FlorianT
 bool nmeaoutput = 0;
-bool sectionout = 0;
+bool sectionout = 0; 
 
 /************************* User Settings *************************/
 // Serial Ports
@@ -120,7 +120,7 @@ extern float emaGpsHdg;
 #include <NativeEthernet.h>
 #include <NativeEthernetUdp.h>
 
-//---- IsoBridge host settings ----
+//---- IsoBridge host settings ---- //Isobus udp
 #define ISO_ETHERNET_UP    Ethernet_running       //stock AiO flag, set in EthernetStart()
 #define ISO_STEER_ENGAGED  (guidanceStatus != 0)  //only reported to the PC, optional
 #define ISO_ALWAYS_ON                             //see "No console?" below
@@ -231,7 +231,7 @@ void setup()
   Serial.println("\r\nStarting Ethernet...");
   EthernetStart();
 
-  isoSetup(); 
+  isoSetup(); //Isobus udp
 
   Serial.println("\r\nStarting IMU...");
   //test if CMPS working
@@ -351,7 +351,7 @@ void loop()
         imuHandler();   //Get IMU data ready
     }
     
-    isoLoop();
+    isoLoop(); //Isobus udp
 
     if (Autosteer_running) autosteerLoop();
     else ReceiveUdp();

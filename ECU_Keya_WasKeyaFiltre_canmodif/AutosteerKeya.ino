@@ -225,21 +225,7 @@ void autosteerSetup()
 	Wire1.end();
 	Wire1.begin();
 
-	// Check ADC 
-	if (adc.testConnection())
-	{
-		Serial.println("ADC Connection OK");
-	}
-	else
-	{
-		Serial.println("ADC Connecton FAILED!");
-		if (!steerConfig.IsDanfoss) {
-			Autosteer_running = false;  // bloquant seulement en mode WAS physique
-		} else {
-			Serial.println("ADC non utilise en mode encodeur Keya (IsDanfoss=1).");
-		}
-	}
-
+	
 	//50Khz I2C
 	//TWBR = 144;   //Is this needed?
 
@@ -262,6 +248,27 @@ void autosteerSetup()
 	}
 
 	steerSettingsInit();
+
+// Check ADC 
+	if (adc.testConnection())
+	{
+		Serial.println("ADC Connection OK");
+	}
+	else
+	{
+		Serial.println("ADC Connecton FAILED!");
+		if (!steerConfig.IsDanfoss) {
+			Autosteer_running = false;  // bloquant seulement en mode WAS physique
+		} else {
+			Serial.println("ADC non utilise en mode encodeur Keya (IsDanfoss=1).");
+		}
+	}
+
+// Parametres auto-zero + EMA : charges AVANT tout return possible
+	azMenuSetup();
+	emaParamsLoad();
+
+
   if (sectionout == 1)
       {
         sectionControlSetup(); // ajoutés par FlorianT
@@ -307,9 +314,7 @@ void autosteerSetup()
 	adc.setSampleRate(ADS1115_REG_CONFIG_DR_128SPS); //128 samples per second
 	adc.setGain(ADS1115_REG_CONFIG_PGA_6_144V);
 
-  // Charger les parametres auto-zero depuis EEPROM
-  azMenuSetup();
-  emaParamsLoad();
+
 
 }// End of Setup
 
@@ -759,7 +764,7 @@ void ReceiveUdp()
 		return;
 	}
 
-	uint16_t len = Eth_udpAutoSteer.parsePacket();
+	uint16_t len = Eth_udpAutoSteer.parsePacket(); //OTA
 
 	// if (len > 0)
 	// {
@@ -771,8 +776,8 @@ void ReceiveUdp()
 	if (len > 4)
 	{
 		Eth_udpAutoSteer.read(autoSteerUdpData, UDP_TX_PACKET_MAX_SIZE);
-    if (autoSteerUdpData[3] == 0xB0) { otaEnter(len); return; }
-    if (autoSteerUdpData[3] == 0xB0) { Serial.println("OTA recu"); otaEnter(len); return; }
+    if (autoSteerUdpData[3] == 0xB0) { otaEnter(len); return; }  // OTA
+    if (autoSteerUdpData[3] == 0xB0) { Serial.println("OTA recu"); otaEnter(len); return; }  // OTA
 
 		if (autoSteerUdpData[0] == 0x80 && autoSteerUdpData[1] == 0x81 && autoSteerUdpData[2] == 0x7F) //Data
 		{

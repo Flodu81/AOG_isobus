@@ -128,6 +128,13 @@ static void handlePost(const String& body)
 
   EEPROM.put(EEPROM_ADDR_AZ_PARAMS, azParams);
 
+    {
+    AutoZeroParams chk;
+    EEPROM.get(EEPROM_ADDR_AZ_PARAMS, chk);
+    Serial.println(memcmp(&chk, &azParams, sizeof(chk)) == 0
+                   ? "[WEB] EEPROM verif OK" : "[WEB] EEPROM verif ECHEC");
+  }
+
   float ticks = extractFloat(body, "keyaTicks", keyaTicksPerDeg);
   if (ticks > 1.0f && ticks < 500.0f) {
     keyaTicksPerDeg = ticks;
@@ -567,36 +574,28 @@ void webConfigLoop()
   bool     headersDone = false;
   String   line        = "";
 
-  while (client.connected() && (millis() - t < 200))
+   while (client.connected() && (millis() - t < 500))
   {
     if (!client.available()) continue;
-    char ch = client.read();
 
+    if (headersDone)                       // phase corps
+    {
+      if (!isPost || contentLen <= 0) break;
+      body += (char)client.read();
+      if ((int)body.length() >= contentLen) break;
+      continue;
+    }
+
+    char ch = client.read();               // phase en-tetes
     if (ch == '\n')
     {
-      if (!headersDone)
-      {
-        if (requestLine.length() == 0) requestLine = line;
-        if (line.startsWith("POST"))            isPost     = true;
-        if (line.startsWith("Content-Length:")) contentLen = line.substring(16).toInt();
-        if (line.length() <= 1) {
-          headersDone = true;
-          if (!isPost) break;
-        }
-        line = "";
-      }
+      if (requestLine.length() == 0) requestLine = line;
+      if (line.startsWith("POST"))            isPost     = true;
+      if (line.startsWith("Content-Length:")) contentLen = line.substring(15).toInt();
+      if (line.length() == 0) { headersDone = true; if (!isPost) break; }
+      line = "";
     }
-    else if (ch != '\r')
-    {
-      line += ch;
-    }
-
-    if (headersDone && isPost && contentLen > 0)
-    {
-      while (client.available() && (int)body.length() < contentLen)
-        body += (char)client.read();
-      break;
-    }
+    else if (ch != '\r') line += ch;
   }
 
   if (isPost && body.length() > 0) {

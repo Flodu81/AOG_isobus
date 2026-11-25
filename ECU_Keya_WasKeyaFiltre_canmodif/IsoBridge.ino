@@ -34,15 +34,6 @@
 // top of the main sketch, and some of them name CAN_message_t and IPAddress.
 //=============================================================================
 
-//Which Teensy 4.1 CAN peripheral carries ISOBUS: 1, 2 or 3.
-//  CAN1 = TX 22 / RX 23    CAN2 = TX 1 / RX 0    CAN3 = TX 31 / RX 30
-//It needs a 3.3 V CAN transceiver on the board, and nothing else on those pins.
-// #ifndef ISO_CAN_BUS_NUM
-//   #define ISO_CAN_BUS_NUM 3
-// #endif
-
-
-// #define ISO_CAN_BASE  CAN3
 
 
 //Shown to the PC clients in HELLO_ACK. Up to 16 characters.
@@ -97,23 +88,7 @@
 
 #include <EEPROM.h>
 
-// #if   ISO_CAN_BUS_NUM == 1
-//   #define ISO_CAN_BUS  CAN1
-// #elif ISO_CAN_BUS_NUM == 2
-//   #define ISO_CAN_BUS  CAN2
-// #elif ISO_CAN_BUS_NUM == 3
-//   #define ISO_CAN_BUS  CAN3
-// #else
-//   #error "ISO_CAN_BUS_NUM must be 1, 2 or 3"
-// #endif
 
-// #ifndef ISO_SHARED_BUS
-//   // A pool upload is a sustained burst, so both queues are deep.
-//   FlexCAN_T4<ISO_CAN_BUS, RX_SIZE_512, TX_SIZE_128> isoCan;
-// #endif
-
-// //The CAN1/CAN2/CAN3 tokens are the peripheral base addresses (FlexCAN_T4.h), so
-// //the error registers can be read directly whoever owns the object. FlexCAN_T4's
 // //own error() needs events() and an interrupt-driven setup; these need neither.
  
 
