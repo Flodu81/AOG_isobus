@@ -1,4 +1,6 @@
 // =====================================================================
+
+//code crée par Ludo
 // zDualHeading.ino  -  Double antenne (UM982 / UM980 dual, trame $KSXT)
 // Ajout 27/10/2026
 //
