@@ -158,6 +158,19 @@ static void handlePost(const String& body)
       EEPROM.put(EEPROM_ADDR_EMA_STOP, emaStopKmh); // Sauvegarde
   }
 }
+dualCfg.paogiEn = body.indexOf("duPaogi=1") >= 0 ? 1 : 0;
+dualCfg.azEn    = body.indexOf("duAz=1")    >= 0 ? 1 : 0;
+float f;
+f = extractFloat(body, "duWb",   dualCfg.wheelbase); if (f > 0.5f && f < 8.0f)   dualCfg.wheelbase = f;
+f = extractFloat(body, "duVmin", dualCfg.vMin);      if (f >= 0.5f && f < 20.0f) dualCfg.vMin = f;
+f = extractFloat(body, "duAmax", dualCfg.aMax);      if (f > 0.5f && f < 40.0f)  dualCfg.aMax = f;
+f = extractFloat(body, "duTau",  dualCfg.tau);       if (f > 0.2f && f < 120.0f) dualCfg.tau = f;
+f = extractFloat(body, "duStd",  dualCfg.steadyDeg); if (f > 0.05f && f < 10.0f) dualCfg.steadyDeg = f;
+int q = (int)extractFloat(body, "duQ",    dualCfg.minQ);    if (q >= 2 && q <= 3) dualCfg.minQ = q;
+int r = (int)extractFloat(body, "duRoll", dualCfg.rollSrc); if (r >= 0 && r <= 4) dualCfg.rollSrc = r;
+int m = (int)extractFloat(body, "duMnt",  dualCfg.mountOff);
+if (m == -1 || m == 0 || m == 90 || m == 180 || m == 270) dualCfg.mountOff = m;
+dualSave();
 
   Serial.print("[WEB] Sauv. useBno="); Serial.print(azParams.useBno);
   Serial.print(" useGps=");            Serial.print(azParams.useGps);
@@ -461,6 +474,22 @@ static void sendPage(EthernetClient& c)
     "<b>Defaut 24.0</b> = 4 tours moteur pour 60 deg butee-a-butee. "
     "Si l'angle AOG est trop grand : augmenter. Trop petit : diminuer. "
     "Formule : (tours_moteur x 65535) / angle_total_deg.");
+
+    c.println("<h2>&#128752; Double antenne (UM982 - KSXT)</h2>");
+c.print("<div class='desc'>KSXT : <b>"); c.print(dualHeadingFresh() ? "recue" : "absente");
+c.print("</b> &nbsp; Sortie AOG : <b>"); c.print(dualPaogiActive() ? "$PAOGI" : "$PANDA");
+c.print("</b><br>Cap : <b>"); c.print(ksxtHeading, 2); c.print("</b> &nbsp; Qualite : <b>"); c.print(ksxtHdgQ);
+c.print("</b><br>Auto-zero : <b>"); c.print(duState); c.println("</b></div>");
+rowToggle(c, "Envoyer $PAOGI a AOG", "duPaogi", dualCfg.paogiEn, "");
+rowToggle(c, "Auto-zero Keya par double antenne", "duAz", dualCfg.azEn, "");
+rowNum(c, "Empattement", "duWb", dualCfg.wheelbase, 2, "m", "");
+rowNum(c, "Vitesse mini", "duVmin", dualCfg.vMin, 1, "km/h", "");
+rowNum(c, "Angle roue maxi pour le zero", "duAmax", dualCfg.aMax, 1, "deg", "");
+rowNum(c, "Constante de temps du zero", "duTau", dualCfg.tau, 1, "s", "");
+rowNum(c, "Variation maxi volant sur 1 s", "duStd", dualCfg.steadyDeg, 2, "deg", "");
+rowNum(c, "Qualite cap mini (2 float, 3 fixe)", "duQ", dualCfg.minQ, 0, "", "");
+rowNum(c, "Source roulis (0 auto, 1 +tangage, 2 -tangage, 3 IMU, 4 aucun)", "duRoll", dualCfg.rollSrc, 0, "", "");
+rowNum(c, "Montage antennes (-1 auto, 0/90/180/270)", "duMnt", dualCfg.mountOff, 0, "deg", "");
 
   // ================================================================
   // SECTION 5 : FILTRES EMA BNO

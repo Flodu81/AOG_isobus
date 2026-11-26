@@ -283,3 +283,5 @@ static uint16_t MODBUS_CRC16_v3( const unsigned char *buf, unsigned int len )
 
   return crc;
 }
+
+float tm171RollDeg() { return RollV.fValue; }

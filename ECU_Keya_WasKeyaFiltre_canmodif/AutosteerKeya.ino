@@ -439,6 +439,7 @@ void autosteerLoop()
     // =================================================================
     if (steerConfig.IsDanfoss)
     {
+      dualEncSample();
       // --- MODE ENCODEUR KEYA ---
       int32_t deltaTicks = keyaEncoderRaw - keyaZeroTicks;
       float rawAngle = (float)deltaTicks / keyaTicksPerDeg;
@@ -488,7 +489,9 @@ void autosteerLoop()
     // =================================================================
     // AUTO-ZERO KEYA ENCODEUR - uniquement en mode IsDanfoss = 1
     // =================================================================
-    if (steerConfig.IsDanfoss)
+    if (steerConfig.IsDanfoss && !dualAzInCharge())
+
+  
     {
     static const float AZ_NEAR_ZERO_DEG    = 2.0f;
     static const float AZ_NEAR_ZERO_FACTOR = 0.3f;

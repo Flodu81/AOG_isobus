@@ -187,7 +187,7 @@ uint8_t GPStxbuffer[serial_buffer_size];    //Extra serial tx buffer
 uint8_t RTKrxbuffer[serial_buffer_size];    //Extra serial rx buffer
 
 /* A parser is declared with 3 handlers at most */
-NMEAParser<3> parser; // Modif FlorianT NMEAOUT
+NMEAParser<4> parser; // Modif FlorianT NMEAOUT
 
 bool isTriggered = false;
 bool blink = false;
@@ -209,6 +209,7 @@ void setup()
   parser.addHandler("G-GGA", GGA_Handler);
   parser.addHandler("G-VTG", VTG_Handler);
   parser.addHandler("G-RMC", RMC_Handler); //FlorianT
+  parser.addHandler("KSXT", KSXT_Handler);   // après le handler RMC
 
   delay(10);
   Serial.begin(baudAOG);
@@ -227,6 +228,8 @@ void setup()
 
   Serial.println("\r\nStarting AutoSteer...");
   autosteerSetup();
+
+  dualSetup(); 
   
   Serial.println("\r\nStarting Ethernet...");
   EthernetStart();
@@ -326,10 +329,8 @@ void loop()
     webConfigLoop();
 
     // Read incoming nmea from GPS modif FlorianT
-    if (SerialGPS->available())
-    {
-        parser << SerialGPS->read(); 
-    }
+    int nGps = SerialGPS->available();
+while (nGps-- > 0) parser << SerialGPS->read();
 
     udpNtrip();
     if (nmeaoutput == 1)

@@ -291,7 +291,8 @@ void BuildNmea(void)
 {
     strcpy(nmea, "");
 
-    strcat(nmea, "$PANDA,");
+    bool dualOut = dualPaogiActive();
+strcat(nmea, dualOut ? "$PAOGI," : "$PANDA,");
 
     strcat(nmea, fixTime);
     strcat(nmea, ",");
@@ -329,22 +330,14 @@ void BuildNmea(void)
     strcat(nmea, speedKnots);
     strcat(nmea, ",");
 
-    //12
-    strcat(nmea, imuHeading);
-    strcat(nmea, ",");
-
-    //13
-    strcat(nmea, imuRoll);
-    strcat(nmea, ",");
-
-    //14
-    strcat(nmea, imuPitch);
-    strcat(nmea, ",");
-
-    //15
+    if (dualOut) {
+    dualAppendPaogiFields(nmea);   // cap, roulis, 2 champs vides
+} else {
+    strcat(nmea, imuHeading); strcat(nmea, ",");
+    strcat(nmea, imuRoll);    strcat(nmea, ",");
+    strcat(nmea, imuPitch);   strcat(nmea, ",");
     strcat(nmea, imuYawRate);
-
-    strcat(nmea, "*");
+}
 
     CalculateChecksum();
 
@@ -404,6 +397,8 @@ void CalculateChecksum(void)
 bool handleEmaSerialCommand(const String& cmd)
 {
     if (cmd.length() < 2) return false;
+    
+    if (cmd.startsWith("DU")) { dualPrintStatus(); return true; }
 
     // Affichage etat courant
     if (cmd.startsWith("EY?") || cmd.startsWith("ER?") || cmd.startsWith("EP?") || cmd.startsWith("ES?"))
